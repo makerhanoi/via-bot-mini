@@ -12,7 +12,7 @@ void setup() {
   Serial.begin(115200);
   Serial.setDebugOutput(true);
   Serial.println();
-
+  
   initCamera();
   initWifi();
   startCameraServer();
@@ -49,6 +49,5 @@ void setup() {
   }
 }
 
-void loop() {
-  delay(2000);
-}
+void loop() {}
+

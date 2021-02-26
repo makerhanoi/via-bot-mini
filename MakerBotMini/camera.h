@@ -37,9 +37,9 @@ void initCamera() {
   //   config.fb_count = 1;
   // }
 
-  config.frame_size = FRAMESIZE_QVGA;
-  config.jpeg_quality = 50;
-  config.fb_count = 1;
+  config.frame_size = FRAMESIZE_CIF;
+  config.jpeg_quality = 10;
+  config.fb_count = 2;
 
 #if defined(CAMERA_MODEL_ESP_EYE)
   pinMode(13, INPUT_PULLUP);

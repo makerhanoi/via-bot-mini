@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
+#include "driver/ledc.h"
+#include "esp_err.h"
+
+#define LEDC_AUTO_CLK   0
+
 #define MOTOR_FREQ 5000 // PWM MOTOR_FREQ for DC motor should be within 5-20kHz
  
 // Motors pin number
@@ -7,29 +15,56 @@
 #define MOTOR2_A 15
 #define MOTOR2_B 13
  
-#define PWM_CHANNEL1 1
-#define PWM_CHANNEL2 2
+#define PWM_CHANNEL1 LEDC_CHANNEL_2
+#define PWM_CHANNEL2 LEDC_CHANNEL_3
  
-#define PWM_CHANNEL3 3
-#define PWM_CHANNEL4 4
+#define PWM_CHANNEL3 LEDC_CHANNEL_4
+#define PWM_CHANNEL4 LEDC_CHANNEL_5
  
-#define PWM_RES 8 // Resolution of pwm signal here is set to 8 bit, resolution can be set up to 15 bit with esp32
+#define PWM_RES LEDC_TIMER_8_BIT // Resolution of pwm signal here is set to 8 bit, resolution can be set up to 15 bit with esp32
 
 #define MIN_PWM 0
 #define MAX_PWM 255
  
 
 void initMotors() {
-  ledcSetup(PWM_CHANNEL1, MOTOR_FREQ, PWM_RES);
-  ledcSetup(PWM_CHANNEL2, MOTOR_FREQ, PWM_RES);
-  ledcSetup(PWM_CHANNEL3, MOTOR_FREQ, PWM_RES);
-  ledcSetup(PWM_CHANNEL4, MOTOR_FREQ, PWM_RES);
 
-  ledcAttachPin(MOTOR1_A, PWM_CHANNEL1);
-  ledcAttachPin(MOTOR1_B, PWM_CHANNEL2);
- 
-  ledcAttachPin(MOTOR2_A, PWM_CHANNEL3);
-  ledcAttachPin(MOTOR2_B, PWM_CHANNEL4);
+  ledc_channel_config_t ledc_timer1;
+  ledc_timer1.channel = PWM_CHANNEL1;
+  ledc_timer1.duty       = 0;
+  ledc_timer1.gpio_num   = MOTOR1_A;
+  ledc_timer1.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_timer1.hpoint     = 0;
+  ledc_timer1.timer_sel  = LEDC_TIMER_2;
+  ledc_channel_config(&ledc_timer1);
+
+  ledc_channel_config_t ledc_timer2;
+  ledc_timer2.channel    = PWM_CHANNEL2;
+  ledc_timer2.duty       = 0;
+  ledc_timer2.gpio_num   = MOTOR1_B;
+  ledc_timer2.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_timer2.hpoint     = 0;
+  ledc_timer2.timer_sel  = LEDC_TIMER_2;
+  ledc_channel_config(&ledc_timer2);
+
+  ledc_channel_config_t ledc_timer3;
+  ledc_timer3.channel    = PWM_CHANNEL3;
+  ledc_timer3.duty       = 0;
+  ledc_timer3.gpio_num   = MOTOR2_A;
+  ledc_timer3.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_timer3.hpoint     = 0;
+  ledc_timer3.timer_sel  = LEDC_TIMER_2;
+  ledc_channel_config(&ledc_timer3);
+
+  ledc_channel_config_t ledc_timer4;
+  ledc_timer4.channel    = PWM_CHANNEL4;
+  ledc_timer4.duty       = 0;
+  ledc_timer4.gpio_num   = MOTOR2_B;
+  ledc_timer4.speed_mode = LEDC_HIGH_SPEED_MODE;
+  ledc_timer4.hpoint     = 0;
+  ledc_timer4.timer_sel  = LEDC_TIMER_2;
+  ledc_channel_config(&ledc_timer4);
+
 }
 
 
