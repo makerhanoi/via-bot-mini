@@ -1,14 +1,9 @@
 #include <stdio.h>
-#include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
 #include "driver/ledc.h"
 #include "esp_err.h"
 
-#define LEDC_AUTO_CLK   0
-
 #define MOTOR_FREQ 5000 // PWM MOTOR_FREQ for DC motor should be within 5-20kHz
- 
-// Motors pin number
+
 #define MOTOR1_A 12 
 #define MOTOR1_B 14
  
