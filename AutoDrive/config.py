@@ -1,0 +1,4 @@
+
+CAM_URL = "http://192.168.4.1:81/stream"
+CONTROL_IP = "192.168.4.1"
+CONTROL_PORT = "1234"

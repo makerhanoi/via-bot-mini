@@ -4,14 +4,14 @@
 #define MOTOR1_A 12 
 #define MOTOR1_B 14
  
-#define MOTOR2_A 4
+#define MOTOR2_A 15
 #define MOTOR2_B 13
  
-#define PWM_CHANNEL1 0
-#define PWM_CHANNEL2 1
+#define PWM_CHANNEL1 1
+#define PWM_CHANNEL2 2
  
-#define PWM_CHANNEL3 2
-#define PWM_CHANNEL4 3
+#define PWM_CHANNEL3 3
+#define PWM_CHANNEL4 4
  
 #define PWM_RES 8 // Resolution of pwm signal here is set to 8 bit, resolution can be set up to 15 bit with esp32
 
@@ -24,7 +24,7 @@ void initMotors() {
   ledcSetup(PWM_CHANNEL2, MOTOR_FREQ, PWM_RES);
   ledcSetup(PWM_CHANNEL3, MOTOR_FREQ, PWM_RES);
   ledcSetup(PWM_CHANNEL4, MOTOR_FREQ, PWM_RES);
- // attatch motors pin to pwm channels
+
   ledcAttachPin(MOTOR1_A, PWM_CHANNEL1);
   ledcAttachPin(MOTOR1_B, PWM_CHANNEL2);
  

@@ -1,12 +1,4 @@
 #include "esp_camera.h"
-
-// Select camera model
-//#define CAMERA_MODEL_WROVER_KIT
-//#define CAMERA_MODEL_ESP_EYE
-//#define CAMERA_MODEL_M5STACK_PSRAM
-//#define CAMERA_MODEL_M5STACK_WIDE
-#define CAMERA_MODEL_AI_THINKER
-
 #include "camera_pins.h"
 
 void startCameraServer();
@@ -35,15 +27,19 @@ void initCamera() {
   config.pixel_format = PIXFORMAT_JPEG;
 
   // Init with high specs to pre-allocate larger buffers
-  if (psramFound()) {
-    config.frame_size = FRAMESIZE_UXGA;
-    config.jpeg_quality = 10;
-    config.fb_count = 2;
-  } else {
-    config.frame_size = FRAMESIZE_SVGA;
-    config.jpeg_quality = 12;
-    config.fb_count = 1;
-  }
+  // if (psramFound()) {
+  //   config.frame_size = FRAMESIZE_UXGA;
+  //   config.jpeg_quality = 10;
+  //   config.fb_count = 2;
+  // } else {
+  //   config.frame_size = FRAMESIZE_SVGA;
+  //   config.jpeg_quality = 12;
+  //   config.fb_count = 1;
+  // }
+
+  config.frame_size = FRAMESIZE_QVGA;
+  config.jpeg_quality = 50;
+  config.fb_count = 1;
 
 #if defined(CAMERA_MODEL_ESP_EYE)
   pinMode(13, INPUT_PULLUP);

@@ -1,32 +1,34 @@
 import cv2
 import numpy as np
+import socket
 from utils import *
+from config import CONTROL_IP, CONTROL_PORT
 
 
-frame_id = 0
+MAX_ANGLE = 1
+MAX_THROTTLE = 1
+sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
 
+def send_control(steering):
+    """Convert steering and throttle signals to a suitable format and send them to ESP32 bot"""
 
-def get_speed_limit(speed):
-    global speed_limit
-    if speed > speed_limit:
-        speed_limit = MIN_SPEED
+    steering = max(1, min(-1, steering))
+    throttle = max(1, abs(steering) * 0.7 + 0.3)
+    
+    if steering > 0:
+        left_motor_speed = throttle
+        right_motor_speed = throttle * (1 - steering)
     else:
-        speed_limit = MAX_SPEED
-    return speed_limit
-
-
-def send_control(steering_angle, throttle):
-    # TODO: Send control commands to makerboit
-    pass
-
+        left_motor_speed = throttle * (1 + steering) 
+        right_motor_speed = throttle
+    
+    sk.sendto("{} {}".format(left_motor_speed, right_motor_speed).encode('ascii'), (CONTROL_IP, CONTROL_PORT))
+    
 
 def calculate_control_signal(current_speed, image):
-    global frame_id
+    """Calculate control signal from image"""
 
-    frame_id += 1
-    # write_image("rgb", frame_id, image)
-
-    steering_angle = 0
+    steering = 0
     left_point, right_point, im_center = find_lane_lines(image)
     if left_point != -1 and right_point != -1:
 
@@ -35,30 +37,28 @@ def calculate_control_signal(current_speed, image):
         center_diff = center_point - im_center
 
         # Calculate steering angle from center point difference
-        steering_angle = float(center_diff * 0.01)
+        steering = float(center_diff * 0.01)
 
-    # Constant throttle = 15
-    throttle = 10
-
-    return throttle, steering_angle
+    return steering
 
 
 def grayscale(img):
-    """Chuyển ảnh màu sang ảnh xám"""
+    """Convert image to grayscale"""
     return cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 
 def canny(img, low_threshold, high_threshold):
-    """Applies the Canny transform"""
+    """Apply Canny edge detection"""
     return cv2.Canny(img, low_threshold, high_threshold)
 
 
 def gaussian_blur(img, kernel_size):
-    """Applies a Gaussian Noise kernel"""
+    """Apply a Gaussian blur"""
     return cv2.GaussianBlur(img, (kernel_size, kernel_size), 0)
 
 
 def birdview_transform(img):
+    """Get birdview image"""
 
     IMAGE_H = 160
     IMAGE_W = 320
@@ -74,6 +74,7 @@ def birdview_transform(img):
 
 
 def preprocess(img):
+    """Preprocess image to get a birdview image of lane lines"""
 
     img = grayscale(img)
     img = gaussian_blur(img, 11)
@@ -84,6 +85,7 @@ def preprocess(img):
 
 
 def find_lane_lines(image, draw=False):
+    """Find lane lines from color image"""
 
     image = preprocess(image)
 
@@ -92,14 +94,14 @@ def find_lane_lines(image, draw=False):
     if draw:
         viz_img = cv2.cvtColor(image, cv2.COLOR_GRAY2BGR)
 
-    # Vạch kẻ sử dụng để xác định tâm đường
+    # Interested line to determine lane center
     interested_line_y = int(im_height * 0.7)
     if draw:
         cv2.line(viz_img, (0, interested_line_y),
                  (im_width, interested_line_y), (0, 0, 255), 2)
     interested_line = image[interested_line_y, :]
 
-    # Xác định điểm bên trái và bên phải
+    # Determine left point and right point
     left_point = -1
     right_point = -1
     lane_width = 100
@@ -114,7 +116,7 @@ def find_lane_lines(image, draw=False):
             right_point = x
             break
 
-    # Dự đoán điểm trái và điểm phải nếu chỉ thấy 1 trong 2 điểm
+    # Predict occluded points
     if left_point != -1 and right_point == -1:
         right_point = left_point + lane_width
     if left_point == -1 and right_point != -1:

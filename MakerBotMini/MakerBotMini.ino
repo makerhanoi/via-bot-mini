@@ -4,6 +4,7 @@
 #include "camera.h"
 #include "motors.h"
 #include "wifi.h"
+#include "utils.h"
 
 AsyncUDP udp;
 
@@ -13,10 +14,9 @@ void setup() {
   Serial.println();
 
   initCamera();
-  initMotors();
   initWifi();
-
   startCameraServer();
+  initMotors();
 
 
   // Setup command server
@@ -51,5 +51,4 @@ void setup() {
 
 void loop() {
   delay(2000);
-  Serial.println("Running");
 }
