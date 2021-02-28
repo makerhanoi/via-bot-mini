@@ -6,30 +6,53 @@ from config import CONTROL_IP, CONTROL_PORT
 
 
 MAX_ANGLE = 1
-MAX_THROTTLE = 1
+MAX_THROTTLE = 0.5
 sk = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+sk.settimeout(3000)
+
+is_stopped = False
+
 
 def send_control(steering):
     """Convert steering and throttle signals to a suitable format and send them to ESP32 bot"""
 
-    steering = max(1, min(-1, steering))
-    throttle = max(1, abs(steering) * 0.7 + 0.3)
-    
+    global is_stopped
+
+    steering = min(1, max(-1, steering))
+    throttle = MAX_THROTTLE
+
+    left_motor_speed = 0
+    right_motor_speed = 0
+    # print(steering)
     if steering > 0:
         left_motor_speed = throttle
         right_motor_speed = throttle * (1 - steering)
     else:
-        left_motor_speed = throttle * (1 + steering) 
+        left_motor_speed = throttle * (1 + steering)
         right_motor_speed = throttle
-    
-    sk.sendto("{} {}".format(left_motor_speed, right_motor_speed).encode('ascii'), (CONTROL_IP, CONTROL_PORT))
-    
+
+    if is_stopped:
+        left_motor_speed = 0
+        right_motor_speed = 0
+
+    control_msg = "{} {}".format(
+        left_motor_speed, right_motor_speed).encode('ascii')
+    sk.sendto(control_msg, (CONTROL_IP, CONTROL_PORT))
+
 
 def calculate_control_signal(current_speed, image):
     """Calculate control signal from image"""
+    global is_stopped
 
     steering = 0
-    left_point, right_point, im_center = find_lane_lines(image)
+
+    left_point, right_point, im_center, draw = find_lane_lines(
+        image, draw=True)
+    if recognize_red(image) > 0.06:
+        STOP = is_stopped
+
+    cv2.imshow("Lane lines", draw)
+    cv2.waitKey(1)
     if left_point != -1 and right_point != -1:
 
         # Calculate difference between car center point and image center point
@@ -37,9 +60,35 @@ def calculate_control_signal(current_speed, image):
         center_diff = center_point - im_center
 
         # Calculate steering angle from center point difference
-        steering = float(center_diff * 0.01)
+        steering = -float(center_diff * 0.03)
 
     return steering
+
+
+def recognize_red(img):
+    img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    # lower mask (0-10)
+    lower_red = np.array([0, 50, 20])
+    upper_red = np.array([10, 255, 255])
+    mask0 = cv2.inRange(img_hsv, lower_red, upper_red)
+
+    # upper mask (170-180)
+    lower_red = np.array([150, 50, 20])
+    upper_red = np.array([180, 255, 255])
+    mask1 = cv2.inRange(img_hsv, lower_red, upper_red)
+
+    # join my masks
+    mask = mask0+mask1
+
+    red_percent = cv2.countNonZero(mask) / mask.shape[0] / mask.shape[1]
+
+    cv2.imshow("Red", mask)
+    cv2.waitKey(1)
+
+    # print(red_percent)
+
+    return red_percent
 
 
 def grayscale(img):
@@ -77,8 +126,10 @@ def preprocess(img):
     """Preprocess image to get a birdview image of lane lines"""
 
     img = grayscale(img)
-    img = gaussian_blur(img, 11)
-    img = canny(img, 150, 200)
+    img = gaussian_blur(img, 3)
+    img = canny(img, 100, 200)
+    cv2.imshow("Canny", img)
+    cv2.waitKey(1)
     img = birdview_transform(img)
 
     return img
@@ -104,7 +155,7 @@ def find_lane_lines(image, draw=False):
     # Determine left point and right point
     left_point = -1
     right_point = -1
-    lane_width = 100
+    lane_width = 60
 
     center = im_width // 2
     for x in range(center, 0, -1):

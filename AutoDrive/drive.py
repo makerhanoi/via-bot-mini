@@ -15,6 +15,11 @@ current_speed = 0
 stream = urllib.request.urlopen(CAM_URL)
 bytes = bytes()
 
+import time
+for i in range(3, 0, -1): 
+    print(i)
+    time.sleep(1)
+
 while True:
 
     bytes += stream.read(1024)
@@ -34,6 +39,9 @@ while True:
             # Calculate speed and steering angle
             steering = calculate_control_signal(
                 current_speed, image.copy())
+
+            if steering is None:
+                steering = 0
 
             send_control(steering)
         except:
